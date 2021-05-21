@@ -19,42 +19,46 @@ public class President {
     public static void main(String[] args) {
 
         List<Date> inputDates = null;
-
-        try
-        {
-            File file=new File("input.txt");    //creates a new file instance
-            FileReader fr=new FileReader(file);   //reads the file
-            BufferedReader br=new BufferedReader(fr);  //creates a buffering character input stream
+        String line = null;
+        try {
+            File file = new File("input.txt");    //creates a new file instance
+            FileReader fr = new FileReader(file);   //reads the file
+            BufferedReader br = new BufferedReader(fr);  //creates a buffering character input stream
             inputDates = new ArrayList<Date>();
-            String line;
-            while((line=br.readLine())!=null)
-            {
-                Date d = new Date(line);
+
+            while ((line = br.readLine()) != null) {
+                Date d = null;
+                try {
+                   d = new Date(line);
+                } catch (IllegalArgumentException e) {
+                    //e.printStackTrace();
+                    System.out.println("Could not convert given input line " + line + " to Date");
+                    continue;
+                }
                 inputDates.add(d);
             }
             fr.close();    //closes the stream and release the resource
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
+            System.out.println("Could not read the input file");
+            return;
         }
 
 
-
-        System.setProperty("webdriver.chrome.driver", "/Users/kumar.ashish/chromedriver");
+        System.setProperty("webdriver.chrome.driver", "chromedriver");
         WebDriver driver = new ChromeDriver();
         driver.get("https://history.house.gov/Institution/Presidents-Coinciding/Presidents-Coinciding/");
         List<WebElement> allCells = driver.findElements(By.xpath("//div[@class='manual-table manual-table-not-sortable']/table/tbody/tr/td"));
 
         List<List<String>> listOfList = new ArrayList<List<String>>();
 
-        int numRows = allCells.size() / 5 ;
+        int numRows = allCells.size() / 5;
         List<String> row = null;
-        for(int i=0; i<numRows; i++) {
+        for (int i = 0; i < numRows; i++) {
             //When i=0, this means its first row.
             row = new ArrayList<String>();
-            for (int j=0; j<5; j++) {
-                WebElement ele = allCells.get(i*5+j);
+            for (int j = 0; j < 5; j++) {
+                WebElement ele = allCells.get(i * 5 + j);
                 String cell_i_j = ele.getText();
                 row.add(cell_i_j);
             }
@@ -69,7 +73,7 @@ public class President {
             System.out.println("Starting test for date " + givenDate);
 
             //I should keep a map of presidents where key is a pair of dates start and end and value is name of president.
-            boolean flag=false;
+            boolean flag = false;
             for (List<String> oneRow : listOfList) {
                 String dateString = oneRow.get(3);
                 String strStartDate = dateString.split("–")[0].replace(".", "");
@@ -85,22 +89,21 @@ public class President {
 
                 if (isGivenDateInBetween(givenDate, startDate, endDate)) {
                     System.out.println("Name of president on " + givenDate + " is " + oneRow.get(1));
-                    flag=true;
+                    flag = true;
                     break;
                 }
             }
-            if(flag == false)
-                System.out.println("Given date is not valid");
+            if (flag == false)
+                System.out.println("On given date " + givenDate + " there was no president.");
         }
 
     }
 
     public static boolean isGivenDateInBetween(Date date, Date dateStart, Date dateEnd) {
         if (date != null && dateStart != null && dateEnd != null) {
-            if (date.after(dateStart) && date.before(dateEnd)) {
+            if ((date.after(dateStart) && date.before(dateEnd)) || date.equals(dateStart) || date.equals(dateEnd)) {
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         }
